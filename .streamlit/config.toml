@@ -1,0 +1,10 @@
+# ローカル専用で動かすための設定。認証はないため外部に公開しない。
+[server]
+address = "127.0.0.1"
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"

@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest
+# 画面の撮影（scripts/take_screenshots.py）にだけ使う
+playwright==1.65.2

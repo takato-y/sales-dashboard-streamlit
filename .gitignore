@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# 実行時に生成されるデータ・出力（リポジトリには含めない）
+data/generated/
+output/
+
+# Office の一時ファイル
+~$*
+
+# OS
+.DS_Store
+Thumbs.db
