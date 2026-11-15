@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import sys
 from pathlib import Path
 
@@ -15,9 +16,9 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sales_dashboard import analysis, charts, generator, kpi, loader  # noqa: E402
+from sales_dashboard import charts, db, generator, loader  # noqa: E402
 from sales_dashboard import schema as s  # noqa: E402
-from sales_dashboard.filters import FilterCondition, apply_filters, month_range, options  # noqa: E402
+from sales_dashboard.filters import FilterCondition  # noqa: E402
 from sales_dashboard.formatting import man_yen, pct, yen  # noqa: E402
 
 st.set_page_config(page_title="売上分析ダッシュボード", layout="wide")
@@ -47,6 +48,20 @@ def load_sample() -> loader.LoadResult:
     return loader.load_files(sources)
 
 
+def session_db(key: str, result: loader.LoadResult) -> db.SalesDB:
+    """セッションごとのメモリ上の SQLite。読み込んだデータが変わったときだけ作り直す。
+
+    絞り込み条件を表に書くため、セッション間で共有しない（st.cache_resource は使わない）。
+    """
+    held = st.session_state.get("sales_db")
+    if held is None or held[0] != key:
+        sales_db = db.SalesDB()
+        sales_db.load(result)
+        st.session_state["sales_db"] = (key, sales_db)
+        return sales_db
+    return held[1]
+
+
 def money_table(df: pd.DataFrame, money=(), percent=(), height=None):
     """金額は「円」、割合は「%」で表示する表。"""
     fmt = {c: (lambda v: yen(v)) for c in money if c in df.columns}
@@ -66,11 +81,15 @@ with st.sidebar:
         if not files:
             st.info("売上明細のファイルを選んでください。列の形式は README の「使い方」に記載しています。")
             st.stop()
-        result = load_uploaded(tuple((f.name, f.getvalue()) for f in files))
+        sources = tuple((f.name, f.getvalue()) for f in files)
+        result = load_uploaded(sources)
+        key = "|".join(f"{n}:{hashlib.sha256(b).hexdigest()}" for n, b in sources)
     else:
         result = load_sample()
+        key = "sample"
 
 data = result.data
+sales_db = session_db(key, result)
 
 st.title("売上分析ダッシュボード")
 summary = f"読み込み {len(result.files_read)} ファイル・{result.total_rows:,} 行　／　集計対象 {len(data):,} 行"
@@ -87,28 +106,28 @@ if data.empty:
 
 with st.sidebar:
     st.header("絞り込み")
-    months = month_range(data)
-    if months:
-        labels = [str(m) for m in months]
+    labels = sales_db.months()
+    if labels:
         default_start = labels[max(0, len(labels) - 12)]  # 初期表示は直近 12 か月
         start_label, end_label = st.select_slider("期間", options=labels, value=(default_start, labels[-1]))
         start, end = pd.Period(start_label, "M"), pd.Period(end_label, "M")
     else:
         start = end = None
-    staff = st.multiselect("担当者", options(data, s.COL_STAFF), placeholder="すべて")
-    cats = st.multiselect("商品カテゴリ", options(data, s.COL_CATEGORY), placeholder="すべて")
-    regions = st.multiselect("地域", options(data, s.COL_REGION), placeholder="すべて")
+    staff = st.multiselect("担当者", sales_db.options("担当者"), placeholder="すべて")
+    cats = st.multiselect("商品カテゴリ", sales_db.options("商品カテゴリ"), placeholder="すべて")
+    regions = st.multiselect("地域", sales_db.options("地域"), placeholder="すべて")
     st.caption("選ばない項目は「すべて」として集計します。")
 
+# 条件を SQLite の w_cond_* 表に書き、以降はビューを読むだけ
 cond = FilterCondition(start, end, tuple(staff), tuple(cats), tuple(regions))
-filtered = apply_filters(data, cond)
-k = kpi.compute_kpis(data, cond)
-trend = kpi.monthly_trend(data, cond)
-abc_cust = analysis.abc_analysis(filtered, s.COL_CUST_CODE, s.COL_CUST_NAME)
-abc_prod = analysis.abc_analysis(filtered, s.COL_PROD_CODE, s.COL_PROD_NAME)
-by_region = analysis.breakdown(filtered, s.COL_REGION)
-by_staff = analysis.breakdown(filtered, s.COL_STAFF)
-by_cat = analysis.breakdown(filtered, s.COL_CATEGORY)
+sales_db.set_condition(cond)
+k = sales_db.kpis()
+trend = sales_db.monthly_trend()
+abc_cust = sales_db.abc("得意先")
+abc_prod = sales_db.abc("商品")
+by_region = sales_db.breakdown("地域")
+by_staff = sales_db.breakdown("担当者")
+by_cat = sales_db.breakdown("商品カテゴリ")
 
 tab_overview, tab_abc, tab_breakdown, tab_load = st.tabs(["概要", "ABC分析", "地域・担当別", "取込結果"])
 
@@ -130,7 +149,7 @@ with tab_overview:
         st.plotly_chart(charts.trend_figure(trend), width="stretch")
         st.plotly_chart(charts.profit_figure(trend), width="stretch")
         with st.expander("月次推移の表"):
-            t = trend.assign(年月=trend["年月"].astype(str))
+            t = trend
             money_table(t, money=("売上", "粗利", "前年同月売上"), percent=("粗利率", "前年同月比"))
 
 # ---------------------------------------------------------------- ABC分析
@@ -146,7 +165,7 @@ with tab_abc:
             st.plotly_chart(charts.abc_figure(abc, f"{kind}別の売上（上位20）"), width="stretch")
     with right:
         st.markdown("**区分ごとの件数と売上**")
-        money_table(analysis.abc_summary(abc), money=("売上",), percent=("構成比",))
+        money_table(db.abc_summary(abc), money=("売上",), percent=("構成比",))
     st.markdown(f"**{kind}別の一覧**")
     money_table(abc, money=("売上", "粗利"), percent=("粗利率", "構成比", "累積構成比"), height=380)
 

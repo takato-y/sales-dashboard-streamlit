@@ -36,7 +36,7 @@ class FileError:
 
 @dataclass
 class LoadResult:
-    """読み込み結果。data は集計に使う明細、rejected は除外した行。"""
+    """読み込み結果。data は検証を通った明細（金額・年月は SQL 側で計算する）、rejected は除外した行。"""
 
     data: pd.DataFrame
     rejected: pd.DataFrame
@@ -194,8 +194,7 @@ def _validate(raw: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 # ---------------------------------------------------------------- 全体
 
 def _empty_data() -> pd.DataFrame:
-    cols = s.REQUIRED_COLUMNS + [s.COL_SALES, s.COL_COST_AMOUNT, s.COL_PROFIT, s.COL_MONTH,
-                                 s.COL_SOURCE, s.COL_SOURCE_ROW]
+    cols = s.REQUIRED_COLUMNS + [s.COL_SOURCE, s.COL_SOURCE_ROW]
     return pd.DataFrame(columns=cols)
 
 
@@ -248,10 +247,6 @@ def load_files(sources: Iterable[tuple[str, bytes]]) -> LoadResult:
     data[s.COL_QTY] = data[s.COL_QTY].astype("int64")
     data[s.COL_PRICE] = data[s.COL_PRICE].astype("float64")
     data[s.COL_COST] = data[s.COL_COST].astype("float64")
-    data[s.COL_SALES] = data[s.COL_QTY] * data[s.COL_PRICE]
-    data[s.COL_COST_AMOUNT] = data[s.COL_QTY] * data[s.COL_COST]
-    data[s.COL_PROFIT] = data[s.COL_SALES] - data[s.COL_COST_AMOUNT]
-    data[s.COL_MONTH] = data[s.COL_DATE].dt.to_period("M")
     data[s.COL_SOURCE] = raw.loc[valid, s.COL_SOURCE]
     data[s.COL_SOURCE_ROW] = raw.loc[valid, s.COL_SOURCE_ROW]
     data = data.reset_index(drop=True)
