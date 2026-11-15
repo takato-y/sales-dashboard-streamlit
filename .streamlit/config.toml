@@ -8,3 +8,9 @@ gatherUsageStats = false
 
 [theme]
 base = "light"
+
+[client]
+# 画面右上の配備（Deploy）ボタンなど開発者向けの表示を出さない
+toolbarMode = "viewer"
+# 予期しない例外が起きても、画面にはファイルの場所を含む詳細を出さない（詳細は起動した端末に出る）
+showErrorDetails = "none"
