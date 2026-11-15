@@ -84,7 +84,7 @@ flowchart LR
 app/streamlit_app.py        画面
 sales_dashboard/            業務ロジック（loader 読み込み・検証 / db SQL の適用と呼び出し / export 出力 / generator 架空データ）
 sql/                        001_schema.sql・002_views.sql（版つき）、procedures/、sqlserver/（T-SQL 版）
-tests/                      自動テスト（74 件）
+tests/                      自動テスト（75 件）
 scripts/                    架空データの生成、画面の撮影
 docs/                       設計書
 ```
@@ -108,9 +108,10 @@ docs/                       設計書
 | [03_詳細設計.md](docs/03_詳細設計.md) | 読み込み・検証・集計の流れ、例外表（ERR） |
 | [04_入力データ仕様.md](docs/04_入力データ仕様.md) | 列定義・検証ルール |
 | [05_テスト仕様書.md](docs/05_テスト仕様書.md) | テストケース（TC）と実施結果 |
-| [06_導入・運用手順.md](docs/06_導入・運用手順.md) | 導入・起動・毎月の使い方 |
+| [06_導入・運用手順.md](docs/06_導入・運用手順.md) | 導入・起動・毎月の使い方・定期点検・バックアップ・連絡体制 |
 | [07_方式設計.md](docs/07_方式設計.md) | 技術の役割分担、集計に SQL を使う理由、版の管理 |
 | [08_テーブル定義書.md](docs/08_テーブル定義書.md) | テーブル・ビューの定義と ER 図 |
+| [09_障害対応手順書.md](docs/09_障害対応手順書.md) | 障害時の切り分け・エラーID（ERR）ごとの対処・記録と報告 |
 | [docs/adr/](docs/adr/) | 判断の記録（画面方式・ABC の区分・無害化・SQL による集計） |
 | [sql/README.md](sql/README.md) | SQL ファイルの一覧と、SQL Server へ移すときの違い |
 | [CHANGELOG.md](CHANGELOG.md) | 変更履歴 |
