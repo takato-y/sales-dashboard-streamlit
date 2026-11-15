@@ -2,6 +2,18 @@
 
 このプロジェクトの主な変更を記録します。書式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に従います。
 
+## [1.0.1] - 2026-11-16
+
+### Added
+
+- 障害対応手順書（`docs/09_障害対応手順書.md`）：障害時の基本の流れ、切り分けの順番、詳細設計書の全エラーID（ERR-001〜ERR-005・ERR-101〜ERR-111・ERR-201）ごとの対処と再実行の可否、エラーIDの付かない障害、記録と報告のひな形、エラーID対応表
+- 設計書のエラーIDと障害対応手順書の対応を確かめる自動テスト（TC-100）。自動テストは 75 件
+
+### Changed
+
+- 導入・運用手順書（版 1.1）：「困ったとき」に障害対応手順書への参照とエラーIDを追記し、定期点検・バックアップと戻し方・資格情報の更新（該当なし）・連絡体制を追加
+- テスト仕様書（版 1.1）：TC-100 と再実行の結果を追記
+
 ## [1.0.0] - 2026-11-15
 
 ### Added
@@ -19,3 +31,6 @@
 ### Changed
 
 - 集計の処理を pandas から SQL のビューに移した（ADR-0004）
+
+[1.0.1]: https://github.com/takato-y/sales-dashboard-streamlit/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/takato-y/sales-dashboard-streamlit/releases/tag/v1.0.0
