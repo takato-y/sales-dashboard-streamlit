@@ -3,7 +3,7 @@
 [![test](https://github.com/takato-y/sales-dashboard-streamlit/actions/workflows/test.yml/badge.svg)](https://github.com/takato-y/sales-dashboard-streamlit/actions/workflows/test.yml)
 
 - GitHub Actions で検査している範囲：集計・読み込み・出力の自動テストと性能のテスト（pytest）
-- 手元の環境でのみ確かめた範囲：画面の操作と目視の確認（TC-080〜TC-088）
+- 手元の環境でのみ確かめた範囲：画面の操作と目視の確認（TC-080〜TC-084）。SQL Server・Microsoft Excel・事務用 PC 相当・Windows での確認（TC-085〜TC-088）は未実施
 
 毎月の売上明細（CSV・Excel）を読み込むだけで、売上・粗利・前年同月比などの指標、月別の推移、得意先・商品の ABC 分析、地域別・担当者別の内訳がそろう Web 画面です。明細の誤りは集計の前に見つけて理由とともに示し、絞り込んだ結果は Excel と印刷用のページに出力できます。
 
