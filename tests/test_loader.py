@@ -16,12 +16,12 @@ def load(*files):
 
 # ---- FN-001 ファイルの読み込み
 
-def test_tc001_utf8_csv_is_loaded_and_amounts_computed():
+def test_tc001_utf8_csv_is_loaded_and_typed():
     r = load(("a.csv", to_csv_bytes([row(qty=3, price=120, cost=80)])))
     assert len(r.data) == 1 and len(r.rejected) == 0
     d = r.data.iloc[0]
-    assert d[s.COL_SALES] == 360 and d[s.COL_COST_AMOUNT] == 240 and d[s.COL_PROFIT] == 120
-    assert str(d[s.COL_MONTH]) == "2025-01"
+    assert d[s.COL_QTY] == 3 and d[s.COL_PRICE] == 120 and d[s.COL_COST] == 80
+    assert d[s.COL_DATE] == pd.Timestamp("2025-01-06")
 
 
 def test_tc002_cp932_csv_is_loaded():
@@ -110,7 +110,7 @@ def test_tc012_row_level_errors(override, reason):
 
 def test_tc013_negative_quantity_is_return_and_accepted():
     r = load(("a.csv", to_csv_bytes([row(qty=-2, price=100, cost=70)])))
-    assert r.data.iloc[0][s.COL_SALES] == -200 and r.data.iloc[0][s.COL_PROFIT] == -60
+    assert r.data.iloc[0][s.COL_QTY] == -2  # 金額は SQL 側で計算（TC-045）
 
 
 def test_tc014_multiple_reasons_are_joined_and_row_number_matches_file():

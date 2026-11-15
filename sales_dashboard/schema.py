@@ -27,10 +27,6 @@ CODE_COLUMNS = [COL_SLIP, COL_CUST_CODE, COL_PROD_CODE]
 # 前後の空白除去だけを行う文字列の列
 TEXT_COLUMNS = [COL_CUST_NAME, COL_REGION, COL_STAFF, COL_PROD_NAME, COL_CATEGORY]
 
-# 読み込み後に計算して追加する列
-COL_SALES = "売上金額"
-COL_COST_AMOUNT = "原価金額"
-COL_PROFIT = "粗利"
-COL_MONTH = "年月"          # pandas.Period（月）
+# 読み込み時に付ける列（金額・年月は SQL 側で計算する）
 COL_SOURCE = "ファイル名"
 COL_SOURCE_ROW = "元の行番号"  # 見出し行を 1 行目とした行番号

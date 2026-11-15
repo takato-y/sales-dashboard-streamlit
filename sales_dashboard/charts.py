@@ -32,7 +32,7 @@ def _layout(fig: go.Figure, title: str, height: int = 360) -> go.Figure:
 
 def month_labels(trend: pd.DataFrame) -> list[str]:
     """横軸の月の表示（「2025/01」）。日付として解釈されて英語表記になるのを避ける。"""
-    return [f"{p.year}/{p.month:02d}" for p in trend["年月"]]
+    return [str(ym).replace("-", "/") for ym in trend["年月"]]
 
 
 def trend_figure(trend: pd.DataFrame) -> go.Figure:
