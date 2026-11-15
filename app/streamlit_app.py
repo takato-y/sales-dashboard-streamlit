@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import datetime
 import sys
 from pathlib import Path
 
@@ -16,7 +17,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from sales_dashboard import charts, db, generator, loader  # noqa: E402
+from sales_dashboard import charts, db, export, generator, loader  # noqa: E402
 from sales_dashboard import schema as s  # noqa: E402
 from sales_dashboard.filters import FilterCondition  # noqa: E402
 from sales_dashboard.formatting import man_yen, pct, yen  # noqa: E402
@@ -129,7 +130,8 @@ by_region = sales_db.breakdown("地域")
 by_staff = sales_db.breakdown("担当者")
 by_cat = sales_db.breakdown("商品カテゴリ")
 
-tab_overview, tab_abc, tab_breakdown, tab_load = st.tabs(["概要", "ABC分析", "地域・担当別", "取込結果"])
+tab_overview, tab_abc, tab_breakdown, tab_load, tab_export = st.tabs(
+    ["概要", "ABC分析", "地域・担当別", "取込結果", "出力"])
 
 # ---------------------------------------------------------------- 概要
 
@@ -198,8 +200,33 @@ with tab_load:
                                   columns=["ファイル名", "理由"]), hide_index=True, width="stretch")
     if len(result.rejected):
         st.markdown("**除外した行**（行番号は見出し行を 1 行目として数えています）")
-        st.dataframe(result.rejected, hide_index=True, width="stretch")
+        st.dataframe(result.rejected, hide_index=True, width="stretch",
+                     column_config={"理由": st.column_config.TextColumn("理由", width="large")})
+        st.caption("表は横に動かすと、元のファイルのすべての列を確認できます。")
         st.download_button("除外した行を CSV で保存", result.rejected.to_csv(index=False).encode("utf-8-sig"),
                            file_name="除外した行.csv", mime="text/csv")
     elif not result.file_errors:
         st.success("すべての行を集計対象にしました。")
+
+# ---------------------------------------------------------------- 出力
+
+with tab_export:
+    report = export.ReportData(cond, k, trend, abc_cust, abc_prod, by_region, by_staff, by_cat)
+    st.markdown("いま選んでいる絞り込み条件の集計結果を出力します。")
+    stamp = datetime.now().strftime("%Y%m%d_%H%M")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**Excel ファイル**")
+        st.caption("条件と指標・月次推移・ABC 分析・地域別・担当者別・商品カテゴリ別を 1 つのブックにまとめます。"
+                   "「=」などで始まる名称は、数式として動かないよう先頭に「'」を付けて書き出します。")
+        st.download_button("Excel で保存", export.build_excel(report), file_name=f"売上分析_{stamp}.xlsx",
+                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                           type="primary")
+    with c2:
+        st.markdown("**印刷用ページ（PDF 保存向け）**")
+        st.caption("保存した HTML ファイルをブラウザで開き、印刷で「PDF に保存」を選ぶと A4 縦の PDF になります。")
+        page = export.build_print_html(report)
+        st.download_button("印刷用ページを保存", page.encode("utf-8"), file_name=f"売上分析_{stamp}.html",
+                           mime="text/html")
+    # 画面内のプレビューは置かない。印刷用ページは利用者のファイル由来の文字列を含むため、
+    # 画面と同じ出所で動く埋め込み（iframe）には入れず、保存したファイルを別に開く運用にする。
