@@ -2,6 +2,12 @@
 
 このプロジェクトの主な変更を記録します。書式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に従います。
 
+## [1.0.2] - 2026-11-16
+
+### Added
+
+- README の冒頭に操作の様子の GIF（docs/images/demo.gif）を追加
+
 ## [1.0.1] - 2026-11-16
 
 ### Added
@@ -41,5 +47,6 @@
 
 - 集計の処理を pandas から SQL のビューに移した（ADR-0004）
 
+[1.0.2]: https://github.com/takato-y/sales-dashboard-streamlit/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/takato-y/sales-dashboard-streamlit/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/takato-y/sales-dashboard-streamlit/releases/tag/v1.0.0
