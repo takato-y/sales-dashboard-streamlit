@@ -19,7 +19,7 @@ def test_columns_and_period():
     assert months[0] == "2024-01" and months[-1] == "2025-12" and len(months) == 24
     # 土日・年始は含まない
     dates = pd.to_datetime(df[s.COL_DATE])
-    assert (dates.dt.weekday < 5).all()
+    assert (dates.dt.day_of_week < 5).all()
     assert not ((dates.dt.month == 1) & (dates.dt.day <= 3)).any()
 
 
