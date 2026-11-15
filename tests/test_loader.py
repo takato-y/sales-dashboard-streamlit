@@ -49,6 +49,7 @@ def test_tc004_multiple_files_are_combined_in_name_order():
     ("a.csv", b"", "ファイルが空"),
     ("a.xlsx", b"not a zip", "Excel ファイルとして開けません"),
     ("a.csv", "伝票番号,売上日\nS1,2025-01-01\n".encode(), "必須の列がありません：行番号"),
+    ("a.csv", (",".join(s.REQUIRED_COLUMNS) + "\n" + ",".join(["x"] * 15) + "\n").encode(), "CSV として読めません"),
 ])
 def test_tc005_file_level_errors_do_not_stop_other_files(name, content, reason):
     ok = ("ok.csv", to_csv_bytes([row()]))
@@ -101,6 +102,7 @@ def test_tc011_date_formats():
     (dict(cname=""), "得意先名が空です"),
     (dict(staff="   "), "担当者が空です"),
     (dict(line=0), "行番号が1以上の整数ではありません"),
+    (dict(line=""), "行番号が空です"),
 ])
 def test_tc012_row_level_errors(override, reason):
     r = load(("a.csv", to_csv_bytes([row(**override)])))
