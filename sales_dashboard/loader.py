@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import io
 import math
+import warnings
 import zipfile
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -82,8 +83,15 @@ def read_table(name: str, content: bytes) -> pd.DataFrame:
     if ext == ".csv":
         for enc in CSV_ENCODINGS:
             try:
-                df = pd.read_csv(io.BytesIO(content), dtype=str, keep_default_na=False, encoding=enc)
+                # 見出しより列の多い行があると、pandas は既定で先頭の列を行の名前に回して値をずらす。
+                # index_col=False で回さないようにし、その場合に出る警告をファイルの誤りとして扱う
+                with warnings.catch_warnings():
+                    warnings.simplefilter("error", pd.errors.ParserWarning)
+                    df = pd.read_csv(io.BytesIO(content), dtype=str, keep_default_na=False, encoding=enc,
+                                     index_col=False)
                 break
+            except pd.errors.ParserWarning:
+                raise FileLoadError("CSV として読めません（列の数がそろっていない行があります）") from None
             except UnicodeDecodeError:
                 continue
             except pd.errors.EmptyDataError:
